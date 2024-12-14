@@ -85,18 +85,18 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 	var filePath string
 
 	for _, export := range exports {
-		fileinfo, err := os.Stat(export)
+		exportinfo, err := os.Stat(export)
 		if err != nil {
 			return err
 		}
 
-		if !fileinfo.IsDir() {
-			export = "."
+		if !exportinfo.IsDir() {
+			export = filepath.Dir(export)
 		}
 
 		file := filepath.Join(export, requestedFile)
 
-		fileinfo, err = os.Stat(file)
+		_, err = os.Stat(file)
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		} else if err != nil {
@@ -108,7 +108,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
-		fileAbs, err := filepath.Abs(export)
+		fileAbs, err := filepath.Abs(file)
 		if err != nil {
 			return err
 		}
