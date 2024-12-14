@@ -87,7 +87,6 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 	for _, export := range exports {
 		fileinfo, err := os.Stat(export)
 		if err != nil {
-			fmt.Println("nil")
 			return err
 		}
 
@@ -101,7 +100,6 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		} else if err != nil {
-			fmt.Println("nil")
 			return err
 		}
 
