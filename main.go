@@ -18,6 +18,10 @@ import (
 
 const (
 	defaultPort = "8080"
+
+	rootModeSingleDir int = iota
+	rootModeExports
+	rootModeSingleFile
 )
 
 var (
@@ -27,6 +31,8 @@ var (
 	port       string
 	exportsArg = kingpin.Arg("files", "The files or directories to share.").Default(".").ExistingFilesOrDirs()
 	exports    []string
+
+	rootMode int
 )
 
 func main() {
@@ -43,6 +49,21 @@ func main() {
 			}
 		}
 		exports = append(exports, abs)
+	}
+
+	if len(exports) == 1 {
+		info, err := os.Stat(exports[0])
+		if err != nil {
+			kingpin.Fatalf("error while finding root mode: %s", err)
+		}
+
+		if info.IsDir() {
+			rootMode = rootModeSingleDir
+		} else {
+			rootMode = rootModeSingleFile
+		}
+	} else {
+		rootMode = rootModeExports
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -66,25 +87,18 @@ func main() {
 }
 
 func serveRoot(w http.ResponseWriter, r *http.Request) error {
-	if len(exports) == 1 {
-		export := exports[0]
+	export := exports[0]
 
-		fileinfo, err := os.Stat(export)
+	if rootMode == rootModeSingleDir {
+		dir, err := os.ReadDir(export)
 		if err != nil {
 			return err
 		}
 
-		if fileinfo.IsDir() {
-			dir, err := os.ReadDir(export)
-			if err != nil {
-				return err
-			}
-
-			return executeDirEntries(w, dir)
-		} else {
-			http.Redirect(w, r, filepath.Base(export), http.StatusPermanentRedirect)
-			return nil
-		}
+		return executeDirEntries(w, dir)
+	} else if rootMode == rootModeSingleFile {
+		http.Redirect(w, r, filepath.Base(export), http.StatusPermanentRedirect)
+		return nil
 	}
 
 	return executeExports(w)
@@ -116,7 +130,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 		return "", nil
 	}
 
-	if len(exports) == 1 {
+	if rootMode == rootModeSingleDir {
 		for _, export := range exports {
 			var err error
 			file, err = getFile(export, path)
