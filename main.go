@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -33,7 +32,18 @@ var (
 func main() {
 	kingpin.Parse()
 	port = *portFlag
-	exports = *exportsArg
+	for _, export := range *exportsArg {
+		abs, err := filepath.Abs(export)
+		if err != nil {
+			kingpin.Fatalf("error while getting export %s's absolute path: %s", export, err)
+		}
+		for _, export := range exports {
+			if filepath.Base(export) == filepath.Base(abs) {
+				kingpin.Fatalf("can't have 2 exports with same base name: %s, %s", export, abs)
+			}
+		}
+		exports = append(exports, abs)
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
@@ -51,7 +61,7 @@ func main() {
 
 	fmt.Printf("http://127.0.0.1:%s/\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatal(err)
+		kingpin.Fatalf("error while serving: %s", err)
 	}
 }
 
@@ -81,55 +91,67 @@ func serveRoot(w http.ResponseWriter, r *http.Request) error {
 }
 
 func serveExports(w http.ResponseWriter, r *http.Request) error {
-	requestedFile := filepath.Clean(r.URL.Path[1:])
-	var filePath string
+	path := filepath.Clean(r.URL.Path[1:])
+	var file string
 
-	for _, export := range exports {
-		exportinfo, err := os.Stat(export)
-		if err != nil {
-			return err
-		}
+	getFile := func(export string, file string) (string, error) {
+		path := filepath.Join(export, file)
 
-		if !exportinfo.IsDir() {
-			export = filepath.Dir(export)
-		}
-
-		file := filepath.Join(export, requestedFile)
-
-		_, err = os.Stat(file)
+		_, err := os.Stat(path)
 		if errors.Is(err, os.ErrNotExist) {
-			continue
+			return "", nil
 		} else if err != nil {
-			return err
+			return "", err
 		}
 
-		exportAbs, err := filepath.Abs(export)
+		relPath, err := filepath.Rel(export, path)
 		if err != nil {
-			return err
-		}
-
-		fileAbs, err := filepath.Abs(file)
-		if err != nil {
-			return err
-		}
-
-		relPath, err := filepath.Rel(exportAbs, fileAbs)
-		if err != nil {
-			return err
+			return "", err
 		}
 
 		if !strings.HasPrefix(relPath, "..") {
-			filePath = file
-			break
+			return path, nil
+		}
+
+		return "", nil
+	}
+
+	if len(exports) == 1 {
+		for _, export := range exports {
+			var err error
+			file, err = getFile(export, path)
+			if err != nil {
+				kingpin.Errorf("error while finding requested file: %s", err)
+				continue
+			}
+			if file != "" {
+				break
+			}
+		}
+	} else {
+		split := strings.Split(path, string(filepath.Separator))
+		reqExport := split[0]
+		reqFile := filepath.Join(split[1:]...)
+
+		for _, export := range exports {
+			if filepath.Base(export) == reqExport {
+				var err error
+				file, err = getFile(export, reqFile)
+				if err != nil {
+					kingpin.Errorf("error while finding requested file: %s", err)
+				}
+
+				break
+			}
 		}
 	}
 
-	if filePath == "" {
+	if file == "" {
 		http.NotFound(w, r)
 		return nil
 	}
 
-	fileinfo, err := os.Stat(filePath)
+	fileinfo, err := os.Stat(file)
 	if err != nil {
 		return err
 	}
@@ -140,7 +162,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 			return nil
 		}
 
-		dir, err := os.ReadDir(filePath)
+		dir, err := os.ReadDir(file)
 		if err != nil {
 			return err
 		}
@@ -148,7 +170,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 		return executeDirEntries(w, dir)
 	}
 
-	return serveFile(w, filePath)
+	return serveFile(w, file)
 }
 
 func executeDirEntries(w http.ResponseWriter, dir []fs.DirEntry) error {
@@ -185,7 +207,7 @@ func executeExports(w http.ResponseWriter) error {
 }
 
 func httpErr(w http.ResponseWriter, err error) {
-	fmt.Printf("[%s] %s\n", time.Now().Format(time.DateTime), err.Error())
+	kingpin.Errorf("[%s] %s\n", time.Now().Format(time.DateTime), err.Error())
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
