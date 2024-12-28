@@ -230,16 +230,15 @@ func serveFile(w http.ResponseWriter, filename string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
-	buf, err := io.ReadAll(file)
+	mtype, err := filetype.MatchReader(file)
 	if err != nil {
-		return err
+		mtype = filetype.Unknown
 	}
-
-	mtype, err := filetype.Match(buf)
 	w.Header().Set("Content-Type", mtype.MIME.Type)
 
-	_, err = w.Write(buf)
+	_, err = io.Copy(w, file)
 	return err
 }
 
