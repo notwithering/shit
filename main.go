@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/h2non/filetype"
 )
 
 const (
@@ -192,7 +190,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 		return executeDirEntries(w, dir)
 	}
 
-	return serveFile(w, file)
+	return serveFile(w, r, file)
 }
 
 func executeDirEntries(w http.ResponseWriter, dir []fs.DirEntry) error {
@@ -237,21 +235,20 @@ func httpErr(w http.ResponseWriter, err error) {
 	}
 }
 
-func serveFile(w http.ResponseWriter, filename string) error {
+func serveFile(w http.ResponseWriter, r *http.Request, filename string) error {
 	file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	mtype, err := filetype.MatchReader(file)
+	fileinfo, err := os.Stat(filename)
 	if err != nil {
-		mtype = filetype.Unknown
+		return err
 	}
-	w.Header().Set("Content-Type", mtype.MIME.Type)
 
-	_, err = io.Copy(w, file)
-	return err
+	http.ServeContent(w, r, filename, fileinfo.ModTime(), file)
+	return nil
 }
 
 const tmplStr string = `<!DOCTYPE html>
