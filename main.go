@@ -17,7 +17,9 @@ import (
 )
 
 const (
-	defaultPort = "8080"
+	defaultPort  = "8080"
+	readTimeout  = 5 * time.Second
+	writeTimeout = 10 * time.Second
 
 	rootModeSingleDir int = iota
 	rootModeExports
@@ -80,8 +82,14 @@ func main() {
 		}
 	})
 
+	s := &http.Server{
+		Addr:         ":" + port,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+	}
+
 	fmt.Printf("http://127.0.0.1:%s/\n", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := s.ListenAndServe(); err != nil {
 		kingpin.Fatalf("error while serving: %s", err)
 	}
 }
