@@ -221,8 +221,12 @@ func executeExports(w http.ResponseWriter) error {
 }
 
 func httpErr(w http.ResponseWriter, err error) {
-	kingpin.Errorf("[%s] %s\n", time.Now().Format(time.DateTime), err.Error())
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	if !errors.Is(err, http.ErrHandlerTimeout) {
+		kingpin.Errorf("[%s] %s\n", time.Now().Format(time.DateTime), err.Error())
+	}
+	if w.Header().Get("Content-Type") == "" {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func serveFile(w http.ResponseWriter, filename string) error {
