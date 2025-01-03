@@ -25,19 +25,33 @@ const (
 )
 
 var (
-	tmpl = template.Must(template.New("").Parse(tmplStr))
+	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").String()
+	port     string
 
-	portFlag   = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").String()
-	port       string
+	useTLSFlag = kingpin.Flag("tls", "Enable TLS.").Short('t').Bool()
+	useTLS     bool
+
+	tlsCertFlag = kingpin.Flag("cert", "Path to TLS certificate file.").Short('c').ExistingFile()
+	tlsCert     string
+
+	tlsKeyFlag = kingpin.Flag("key", "Path to the TLS key file.").Short('k').ExistingFile()
+	tlsKey     string
+
 	exportsArg = kingpin.Arg("files", "The files or directories to share.").Default(".").ExistingFilesOrDirs()
 	exports    []string
 
+	tmpl     = template.Must(template.New("").Parse(tmplStr))
 	rootMode int
 )
 
 func main() {
 	kingpin.Parse()
+
 	port = *portFlag
+	useTLS = *useTLSFlag
+	tlsCert = *tlsCertFlag
+	tlsKey = *tlsKeyFlag
+
 	for _, export := range *exportsArg {
 		abs, err := filepath.Abs(export)
 		if err != nil {
@@ -86,9 +100,20 @@ func main() {
 		WriteTimeout: writeTimeout,
 	}
 
-	fmt.Printf("http://127.0.0.1:%s/\n", port)
-	if err := s.ListenAndServe(); err != nil {
-		kingpin.Fatalf("error while serving: %s", err)
+	if useTLS {
+		if tlsCert == "" || tlsKey == "" {
+			kingpin.Fatalf("flags --cert and --key are required when --tls is set")
+		}
+
+		fmt.Printf("https://127.0.0.1:%s/\n", port)
+		if err := s.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
+			kingpin.Fatalf("error while serving: %s", err)
+		}
+	} else {
+		fmt.Printf("http://127.0.0.1:%s/\n", port)
+		if err := s.ListenAndServe(); err != nil {
+			kingpin.Fatalf("error while serving: %s", err)
+		}
 	}
 }
 
