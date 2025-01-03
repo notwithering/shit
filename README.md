@@ -29,6 +29,7 @@ go install github.com/notwithering/shit@latest
 	+ returns appropriate http error response to the client for issues like missing files or directories
 - path validation and security
 	+ ensured safe file and directory resolution to prevent directory traversal attacks
+	+ optional flags for enabling tls
 - ease of use
 	+ supports simple command line usage with the [`github.com/alecthomas/kingpin`](https://github.com/alecthomas/kingpin) library for argument parsing
 	+ automatically displays the local server address (`http://127.0.0.1:<port>`)
