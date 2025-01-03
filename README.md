@@ -22,8 +22,8 @@ go install github.com/notwithering/shit@latest
 	+ automatically lists directory contents as clickable links in an html interface
 	+ redirects to a file or directory if the root directory contains a single export target
 - file handling
-	+ serves files with their correct MIME types using [`github.com/h2non/filetype`](https://github.com/h2non/filetype) library
-	+ reads and streams file content directly
+	+ serves files with their correct MIME types
+	+ reads and streams file content directly 
 - error handling
 	+ provides error logging in the console including timestamps for debugging
 	+ returns appropriate http error response to the client for issues like missing files or directories
@@ -93,6 +93,5 @@ etc.
 this project uses the following dependencies with the license as noted:
 
 - [github.com/alecthomas/kingpin](https://github.com/alecthomas/kingpin) - MIT License
-- [github.com/h2non/filetype](https://github.com/h2non/filetype) - MIT License
 
 each dependency retains its respective license. for more details refer to their official documentation or source code
