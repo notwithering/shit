@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	hostFlag = kingpin.Flag("host", "The host to bind to.").Short('H').Default("127.0.0.1").Envar("HOST").String()
+	hostFlag = kingpin.Flag("host", "The host to bind to.").Short('H').Default("0.0.0.0").Envar("HOST").String()
 	host     string
 
 	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").Envar("PORT").String()
@@ -99,7 +99,7 @@ func main() {
 	})
 
 	s := &http.Server{
-		Addr:         ":" + port,
+		Addr:         host + ":" + port,
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 	}
