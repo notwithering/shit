@@ -25,6 +25,9 @@ const (
 )
 
 var (
+	hostFlag = kingpin.Flag("host", "The host to bind to.").Short('H').Default("127.0.0.1").Envar("HOST").String()
+	host     string
+
 	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").Envar("PORT").String()
 	port     string
 
@@ -47,6 +50,7 @@ var (
 func main() {
 	kingpin.Parse()
 
+	host = *hostFlag
 	port = *portFlag
 	useTLS = *useTLSFlag
 	tlsCert = *tlsCertFlag
@@ -105,12 +109,12 @@ func main() {
 			kingpin.Fatalf("flags --cert and --key are required when --tls is set")
 		}
 
-		fmt.Printf("https://127.0.0.1:%s/\n", port)
+		fmt.Printf("https://%s:%s/\n", host, port)
 		if err := s.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
 			kingpin.Fatalf("error while serving: %s", err)
 		}
 	} else {
-		fmt.Printf("http://127.0.0.1:%s/\n", port)
+		fmt.Printf("http://%s:%s/\n", host, port)
 		if err := s.ListenAndServe(); err != nil {
 			kingpin.Fatalf("error while serving: %s", err)
 		}
