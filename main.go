@@ -25,13 +25,13 @@ const (
 )
 
 var (
-	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").String()
+	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").Envar("PORT").String()
 	port     string
 
-	useTLSFlag = kingpin.Flag("tls", "Enable TLS.").Short('t').Bool()
+	useTLSFlag = kingpin.Flag("tls", "Enable TLS.").Short('t').Envar("TLS_KEY").Bool()
 	useTLS     bool
 
-	tlsCertFlag = kingpin.Flag("cert", "Path to TLS certificate file.").Short('c').ExistingFile()
+	tlsCertFlag = kingpin.Flag("cert", "Path to TLS certificate file.").Short('c').Envar("TLS_CERT").ExistingFile()
 	tlsCert     string
 
 	tlsKeyFlag = kingpin.Flag("key", "Path to the TLS key file.").Short('k').ExistingFile()
