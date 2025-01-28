@@ -6,7 +6,7 @@ shit when i first created it was just a go script that ran an http.FileServer on
 
 shit is a successor to my previous project [vmshare](https://github.com/notwithering/vmshare)
 
-```
+```bash
 go install github.com/notwithering/shit@latest
 ```
 
