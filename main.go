@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	defaultPort  = "8080"
 	readTimeout  = 5 * time.Second
 	writeTimeout = 10 * time.Second
 
