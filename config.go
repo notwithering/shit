@@ -4,6 +4,10 @@ import (
 	"time"
 )
 
+var (
+	indexFiles = []string{"index.html", "index.htm", "index.php", "index.md", "default.html"}
+)
+
 const (
 	readTimeout           = 5 * time.Second
 	writeTimeout          = 10 * time.Second

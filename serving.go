@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	rootMode   int
-	indexFiles = []string{"index.html", "index.htm", "index.php", "index.md", "default.html"}
+	rootMode int
 )
 
 func startServer() {
