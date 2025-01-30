@@ -14,6 +14,9 @@ var (
 	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").Envar("PORT").String()
 	port     string
 
+	goFileServerFlag = kingpin.Flag("go", "Use Go's http.FileServer.").Short('g').Bool()
+	goFileServer     bool
+
 	uploadFlag = kingpin.Flag("upload", "Allow file uploading.").Short('u').Bool()
 	upload     bool
 
@@ -41,6 +44,7 @@ func parseFlags() {
 
 	host = *hostFlag
 	port = *portFlag
+	goFileServer = *goFileServerFlag
 	upload = *uploadFlag
 	useTLS = *useTLSFlag
 	tlsCert = *tlsCertFlag

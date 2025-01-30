@@ -8,6 +8,14 @@ import (
 )
 
 func registerHandlers() {
+	if goFileServer {
+		http.Handle("/", http.FileServer(http.Dir(exports[0])))
+	} else {
+		registerShitHandlers()
+	}
+}
+
+func registerShitHandlers() {
 	http.HandleFunc("GET /", get)
 	if upload {
 		http.HandleFunc("POST /", post)
