@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	rootMode int
+	rootMode   int
+	indexFiles = []string{"index.html", "index.htm", "index.php", "index.md", "default.html"}
 )
 
 func startServer() {
@@ -39,6 +40,21 @@ func serveRoot(w http.ResponseWriter, r *http.Request) error {
 	export := exports[0]
 
 	if rootMode == rootModeSingleDir {
+		if index {
+			path, err := getRealPath(r.URL.Path)
+			if err != nil {
+				return err
+			}
+
+			served, err := serveIndex(w, r, path)
+			if err != nil {
+				return err
+			}
+			if served {
+				return nil
+			}
+		}
+
 		dir, err := os.ReadDir(export)
 		if err != nil {
 			return err
@@ -75,6 +91,16 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 			return nil
 		}
 
+		if index {
+			served, err := serveIndex(w, r, path)
+			if err != nil {
+				return err
+			}
+			if served {
+				return nil
+			}
+		}
+
 		dir, err := os.ReadDir(path)
 		if err != nil {
 			return err
@@ -84,6 +110,16 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return serveFile(w, r, path)
+}
+
+func serveIndex(w http.ResponseWriter, r *http.Request, path string) (bool, error) {
+	for _, indexFile := range indexFiles {
+		indexPath := filepath.Join(path, indexFile)
+		if _, err := os.Stat(indexPath); err == nil {
+			return true, serveFile(w, r, indexPath)
+		}
+	}
+	return false, nil
 }
 
 func executeExports(w http.ResponseWriter) error {

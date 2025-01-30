@@ -20,6 +20,9 @@ var (
 	uploadFlag = kingpin.Flag("upload", "Allow file uploading.").Short('u').Bool()
 	upload     bool
 
+	indexFlag = kingpin.Flag("index", "Automatically serve index files.").Short('i').Bool()
+	index     bool
+
 	useTLSFlag = kingpin.Flag("tls", "Enable TLS.").Short('t').Bool()
 	useTLS     bool
 
@@ -46,6 +49,7 @@ func parseFlags() {
 	port = *portFlag
 	goFileServer = *goFileServerFlag
 	upload = *uploadFlag
+	index = *indexFlag
 	useTLS = *useTLSFlag
 	tlsCert = *tlsCertFlag
 	tlsKey = *tlsKeyFlag
@@ -87,12 +91,16 @@ func checkForFlagIncompatabilities() {
 		err = true
 	}
 	if goFileServer {
+		if len(exports) > 1 {
+			kingpin.Errorf("maximum of 1 export allowed when --go is set")
+			err = true
+		}
 		if upload {
 			kingpin.Errorf("flag --upload incompatible with --go")
 			err = true
 		}
-		if len(exports) > 1 {
-			kingpin.Errorf("maximum of 1 export when --go is set")
+		if index {
+			kingpin.Errorf("flag --index incompatible with --go")
 			err = true
 		}
 	}
