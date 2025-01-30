@@ -15,6 +15,30 @@ var (
 	rootMode int
 )
 
+func startServer() {
+	s := &http.Server{
+		Addr:         host + ":" + port,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+	}
+
+	if useTLS {
+		if tlsCert == "" || tlsKey == "" {
+			kingpin.Fatalf("flags --cert and --key are required when --tls is set")
+		}
+
+		fmt.Printf("https://%s:%s/\n", host, port)
+		if err := s.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
+			kingpin.Fatalf("error while serving: %s", err)
+		}
+	} else {
+		fmt.Printf("http://%s:%s/\n", host, port)
+		if err := s.ListenAndServe(); err != nil {
+			kingpin.Fatalf("error while serving: %s", err)
+		}
+	}
+}
+
 func serveRoot(w http.ResponseWriter, r *http.Request) error {
 	export := exports[0]
 
@@ -103,28 +127,4 @@ func executeDirEntries(w http.ResponseWriter, dir []fs.DirEntry) error {
 		Links:  links,
 		Upload: upload,
 	})
-}
-
-func startServer() {
-	s := &http.Server{
-		Addr:         host + ":" + port,
-		ReadTimeout:  readTimeout,
-		WriteTimeout: writeTimeout,
-	}
-
-	if useTLS {
-		if tlsCert == "" || tlsKey == "" {
-			kingpin.Fatalf("flags --cert and --key are required when --tls is set")
-		}
-
-		fmt.Printf("https://%s:%s/\n", host, port)
-		if err := s.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
-			kingpin.Fatalf("error while serving: %s", err)
-		}
-	} else {
-		fmt.Printf("http://%s:%s/\n", host, port)
-		if err := s.ListenAndServe(); err != nil {
-			kingpin.Fatalf("error while serving: %s", err)
-		}
-	}
 }
