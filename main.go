@@ -1,9 +1,11 @@
 package main
 
 import (
+	"embed"
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -15,8 +17,9 @@ import (
 )
 
 const (
-	readTimeout  = 5 * time.Second
-	writeTimeout = 10 * time.Second
+	readTimeout           = 5 * time.Second
+	writeTimeout          = 10 * time.Second
+	maxUploadMemory int64 = 10 << 20 // 10MB
 
 	rootModeSingleDir int = iota
 	rootModeExports
@@ -30,6 +33,9 @@ var (
 	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").Envar("PORT").String()
 	port     string
 
+	uploadFlag = kingpin.Flag("upload", "Allow file uploading.").Short('u').Bool()
+	upload     bool
+
 	useTLSFlag = kingpin.Flag("tls", "Enable TLS.").Short('t').Bool()
 	useTLS     bool
 
@@ -42,15 +48,25 @@ var (
 	exportsArg = kingpin.Arg("files", "The files or directories to share.").Default(".").ExistingFilesOrDirs()
 	exports    []string
 
-	tmpl     = template.Must(template.New("").Parse(tmplStr))
+	//go:embed index.html
+	embedFS embed.FS
+
+	tmpl     *template.Template
 	rootMode int
 )
 
 func main() {
+	var err error
+	tmpl, err = parseTemplate()
+	if err != nil {
+		kingpin.Fatalf("error while parsing html template: %s", err)
+	}
+
 	kingpin.Parse()
 
 	host = *hostFlag
 	port = *portFlag
+	upload = *uploadFlag
 	useTLS = *useTLSFlag
 	tlsCert = *tlsCertFlag
 	tlsKey = *tlsKeyFlag
@@ -83,7 +99,7 @@ func main() {
 		rootMode = rootModeExports
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			if err := serveRoot(w, r); err != nil {
 				httpErr(w, err)
@@ -96,6 +112,58 @@ func main() {
 			httpErr(w, err)
 		}
 	})
+	if upload {
+
+		http.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
+			if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
+				httpErr(w, err)
+			}
+
+			path, err := getRealPath(r.URL.Path)
+			if err != nil {
+				httpErr(w, err)
+			}
+
+			if path == "" {
+				http.NotFound(w, r)
+			}
+
+			fileinfo, err := os.Stat(path)
+			if err != nil {
+				httpErr(w, err)
+			}
+
+			if !fileinfo.IsDir() {
+				http.NotFound(w, r)
+				return
+			}
+
+			files := r.MultipartForm.File["files"]
+			for _, header := range files {
+				file, err := header.Open()
+				if err != nil {
+					httpErr(w, err)
+					return
+				}
+				defer file.Close()
+
+				dst, err := os.Create(filepath.Join(path, header.Filename))
+				if err != nil {
+					http.Error(w, "Error saving file", http.StatusInternalServerError)
+					return
+				}
+				defer dst.Close()
+
+				_, err = io.Copy(dst, file)
+				if err != nil {
+					httpErr(w, err)
+					return
+				}
+			}
+
+			http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
+		})
+	}
 
 	s := &http.Server{
 		Addr:         host + ":" + port,
@@ -139,8 +207,40 @@ func serveRoot(w http.ResponseWriter, r *http.Request) error {
 }
 
 func serveExports(w http.ResponseWriter, r *http.Request) error {
-	path := filepath.Clean(r.URL.Path[1:])
-	var file string
+	path, err := getRealPath(r.URL.Path)
+	if err != nil {
+		return err
+	}
+
+	if path == "" {
+		http.NotFound(w, r)
+		return nil
+	}
+
+	fileinfo, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	if fileinfo.IsDir() {
+		if !strings.HasSuffix(r.URL.Path, "/") {
+			http.Redirect(w, r, r.URL.Path+"/", http.StatusPermanentRedirect)
+			return nil
+		}
+
+		dir, err := os.ReadDir(path)
+		if err != nil {
+			return err
+		}
+
+		return executeDirEntries(w, dir)
+	}
+
+	return serveFile(w, r, path)
+}
+
+func getRealPath(path string) (string, error) {
+	path = filepath.Clean(path[1:])
 
 	getFile := func(export string, file string) (string, error) {
 		path := filepath.Join(export, file)
@@ -166,14 +266,12 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 
 	if rootMode == rootModeSingleDir {
 		for _, export := range exports {
-			var err error
-			file, err = getFile(export, path)
+			file, err := getFile(export, path)
 			if err != nil {
-				kingpin.Errorf("error while finding requested file: %s", err)
-				continue
+				return "", nil
 			}
 			if file != "" {
-				break
+				return file, nil
 			}
 		}
 	} else {
@@ -183,42 +281,17 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 
 		for _, export := range exports {
 			if filepath.Base(export) == reqExport {
-				var err error
-				file, err = getFile(export, reqFile)
+				file, err := getFile(export, reqFile)
 				if err != nil {
 					kingpin.Errorf("error while finding requested file: %s", err)
 				}
 
-				break
+				return file, nil
 			}
 		}
 	}
 
-	if file == "" {
-		http.NotFound(w, r)
-		return nil
-	}
-
-	fileinfo, err := os.Stat(file)
-	if err != nil {
-		return err
-	}
-
-	if fileinfo.IsDir() {
-		if !strings.HasSuffix(r.URL.Path, "/") {
-			http.Redirect(w, r, r.URL.Path+"/", http.StatusPermanentRedirect)
-			return nil
-		}
-
-		dir, err := os.ReadDir(file)
-		if err != nil {
-			return err
-		}
-
-		return executeDirEntries(w, dir)
-	}
-
-	return serveFile(w, r, file)
+	return "", nil
 }
 
 func executeDirEntries(w http.ResponseWriter, dir []fs.DirEntry) error {
@@ -232,7 +305,10 @@ func executeDirEntries(w http.ResponseWriter, dir []fs.DirEntry) error {
 		links = append(links, name)
 	}
 
-	return tmpl.Execute(w, links)
+	return tmpl.Execute(w, tmplData{
+		Links:  links,
+		Upload: upload,
+	})
 }
 
 func executeExports(w http.ResponseWriter) error {
@@ -251,7 +327,10 @@ func executeExports(w http.ResponseWriter) error {
 		links = append(links, filepath.Base(file))
 	}
 
-	return tmpl.Execute(w, links)
+	return tmpl.Execute(w, tmplData{
+		Links:  links,
+		Upload: upload,
+	})
 }
 
 func httpErr(w http.ResponseWriter, err error) {
@@ -279,8 +358,11 @@ func serveFile(w http.ResponseWriter, r *http.Request, filename string) error {
 	return nil
 }
 
-const tmplStr string = `<!DOCTYPE html>
-<html data-fbscriptallow="true"><head><meta name="viewport" content="width=device-width"></head><body>
-<pre>{{range .}}<a href="{{.}}">{{.}}</a>
-{{end}}</pre>
-</body></html>`
+type tmplData struct {
+	Links  []string
+	Upload bool
+}
+
+func parseTemplate() (*template.Template, error) {
+	return template.ParseFS(embedFS, "*.html")
+}

@@ -1,0 +1,17 @@
+<!doctype html>
+<html data-fbscriptallow="true">
+	<head>
+		<meta name="viewport" content="width=device-width" />
+	</head>
+	<body>
+		<pre>{{range .Links}}<a href="{{.}}">{{.}}</a>
+{{end}}</pre>
+
+		{{if .Upload}}
+		<form method="POST" enctype="multipart/form-data">
+			<input type="file" name="files" multiple required />
+			<button type="submit">Upload</button>
+		</form>
+		{{end}}
+	</body>
+</html>
