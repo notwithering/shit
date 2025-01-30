@@ -78,3 +78,26 @@ func parseFlags() {
 		rootMode = rootModeExports
 	}
 }
+
+func checkForFlagIncompatabilities() {
+	var err bool
+
+	if useTLS && (tlsCert == "" || tlsKey == "") {
+		kingpin.Errorf("flags --cert and --key are required when --tls is set")
+		err = true
+	}
+	if goFileServer {
+		if upload {
+			kingpin.Errorf("flag --upload incompatible with --go")
+			err = true
+		}
+		if len(exports) > 1 {
+			kingpin.Errorf("maximum of 1 export when --go is set")
+			err = true
+		}
+	}
+
+	if err {
+		os.Exit(1)
+	}
+}

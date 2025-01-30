@@ -23,10 +23,6 @@ func startServer() {
 	}
 
 	if useTLS {
-		if tlsCert == "" || tlsKey == "" {
-			kingpin.Fatalf("flags --cert and --key are required when --tls is set")
-		}
-
 		fmt.Printf("https://%s:%s/\n", host, port)
 		if err := s.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
 			kingpin.Fatalf("error while serving: %s", err)
