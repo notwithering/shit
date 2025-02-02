@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	indexFiles = []string{"index.html", "index.htm", "index.php", "index.md", "default.html"}
+	indexFiles = []string{"index.html", "default.html", "index.htm", "home.html", "default.htm", "index.php", "default.php"}
 )
 
 const (
