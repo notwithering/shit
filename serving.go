@@ -38,22 +38,22 @@ func startServer() {
 func serveRoot(w http.ResponseWriter, r *http.Request) error {
 	export := exports[0]
 
-	if rootMode == rootModeSingleDir {
-		if index {
-			path, err := getRealPath(r.URL.Path)
-			if err != nil {
-				return err
-			}
-
-			served, err := serveIndex(w, r, path)
-			if err != nil {
-				return err
-			}
-			if served {
-				return nil
-			}
+	if index {
+		path, err := getRealPath(r.URL.Path)
+		if err != nil {
+			return err
 		}
 
+		served, err := serveIndex(w, r, path)
+		if err != nil {
+			return err
+		}
+		if served {
+			return nil
+		}
+	}
+
+	if rootMode == rootModeSingleDir {
 		dir, err := os.ReadDir(export)
 		if err != nil {
 			return err
