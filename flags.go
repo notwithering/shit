@@ -104,6 +104,10 @@ func checkForFlagIncompatabilities() {
 			err = true
 		}
 	}
+	if upload && rootMode == rootModeSingleFile {
+		kingpin.Errorf("flag --upload incompatible with rootModeSingleFile")
+		err = true
+	}
 
 	if err {
 		os.Exit(1)
