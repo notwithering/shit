@@ -91,8 +91,8 @@ func checkForFlagIncompatabilities() {
 		err = true
 	}
 	if goFileServer {
-		if len(exports) > 1 {
-			kingpin.Errorf("maximum of 1 export allowed when --go is set")
+		if rootMode != rootModeSingleDir {
+			kingpin.Errorf("flag --go only compatible with rootModeSingleDir")
 			err = true
 		}
 		if upload {
