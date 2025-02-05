@@ -59,13 +59,13 @@ func serveRoot(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
-		return executeDirEntries(w, dir)
+		return executeDirEntries(w, r, dir)
 	} else if rootMode == rootModeSingleFile {
 		http.Redirect(w, r, filepath.Base(export), http.StatusPermanentRedirect)
 		return nil
 	}
 
-	return executeExports(w)
+	return executeExports(w, r)
 }
 
 func serveExports(w http.ResponseWriter, r *http.Request) error {
@@ -105,7 +105,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
-		return executeDirEntries(w, dir)
+		return executeDirEntries(w, r, dir)
 	}
 
 	return serveFile(w, r, path)
@@ -121,7 +121,7 @@ func serveIndex(w http.ResponseWriter, r *http.Request, path string) (bool, erro
 	return false, nil
 }
 
-func executeExports(w http.ResponseWriter) error {
+func executeExports(w http.ResponseWriter, r *http.Request) error {
 	var links []string
 
 	for _, file := range exports {
@@ -137,13 +137,10 @@ func executeExports(w http.ResponseWriter) error {
 		links = append(links, filepath.Base(file))
 	}
 
-	return tmpl.Execute(w, tmplData{
-		Links:  links,
-		Upload: upload,
-	})
+	return execute(w, r, links)
 }
 
-func executeDirEntries(w http.ResponseWriter, dir []fs.DirEntry) error {
+func executeDirEntries(w http.ResponseWriter, r *http.Request, dir []fs.DirEntry) error {
 	var links []string
 
 	for _, file := range dir {
@@ -154,8 +151,5 @@ func executeDirEntries(w http.ResponseWriter, dir []fs.DirEntry) error {
 		links = append(links, name)
 	}
 
-	return tmpl.Execute(w, tmplData{
-		Links:  links,
-		Upload: upload,
-	})
+	return execute(w, r, links)
 }

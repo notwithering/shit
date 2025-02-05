@@ -37,12 +37,6 @@ var (
 )
 
 func parseFlags() {
-	var err error
-	tmpl, err = parseTemplate()
-	if err != nil {
-		kingpin.Fatalf("error while parsing html template: %s", err)
-	}
-
 	kingpin.Parse()
 
 	host = *hostFlag

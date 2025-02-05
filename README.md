@@ -17,6 +17,7 @@ go install github.com/notwithering/shit@latest
     - auto-redirects for single items
     - built-in directory browsing with HTML interface
     - proper MIME type detection and handling
+    - detects if using cURL and gives raw text output
 - many options
     - custom host/port (`--host`, `--port`)
     - TLS support (`--tls`, `--cert`, `--key`)
