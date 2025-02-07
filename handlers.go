@@ -39,20 +39,24 @@ func get(w http.ResponseWriter, r *http.Request) {
 func post(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
 		httpErr(w, err)
+		return
 	}
 
 	path, err := getRealPath(r.URL.Path)
 	if err != nil {
 		httpErr(w, err)
+		return
 	}
 
 	if path == "" {
 		http.NotFound(w, r)
+		return
 	}
 
 	fileinfo, err := os.Stat(path)
 	if err != nil {
 		httpErr(w, err)
+		return
 	}
 
 	if !fileinfo.IsDir() {
