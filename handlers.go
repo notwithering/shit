@@ -85,6 +85,10 @@ func post(w http.ResponseWriter, r *http.Request) {
 			httpErr(w, err)
 			return
 		}
+
+		if rootMode == rootModeExports {
+			exports = append(exports, header.Filename)
+		}
 	}
 
 	http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
