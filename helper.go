@@ -58,6 +58,11 @@ func getRealPath(path string) (string, error) {
 	} else {
 		split := strings.Split(path, string(filepath.Separator))
 		reqExport := split[0]
+
+		if reqExport == "." { // r.URL.Path == "/"
+			return ".", nil
+		}
+
 		reqFile := filepath.Join(split[1:]...)
 
 		for _, export := range exports {
