@@ -11,11 +11,6 @@ var (
 	curlReg = regexp.MustCompile("curl/?")
 )
 
-type tmplData struct {
-	Links  []string
-	Upload bool
-}
-
 func execute(w http.ResponseWriter, r *http.Request, links []string) error {
 	response := getResponse(r, links)
 	_, err := w.Write([]byte(response))
