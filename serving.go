@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -126,6 +127,9 @@ func executeExports(w http.ResponseWriter, r *http.Request) error {
 
 	for _, file := range exports {
 		fileinfo, err := os.Stat(file)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
 		if err != nil {
 			return err
 		}
