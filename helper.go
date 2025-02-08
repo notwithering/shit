@@ -21,7 +21,8 @@ func httpErr(w http.ResponseWriter, err error) {
 }
 
 func getRealPath(path string) (string, error) {
-	path = filepath.Clean(path[1:])
+	path = strings.TrimLeft(path, "/")
+	path = filepath.Clean(path)
 
 	getFile := func(export string, file string) (string, error) {
 		path := filepath.Join(export, file)
