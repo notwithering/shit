@@ -20,6 +20,9 @@ var (
 	uploadFlag = kingpin.Flag("upload", "Allow file uploading.").Short('u').Bool()
 	upload     bool
 
+	maxUploadMemoryFlag = kingpin.Flag("max-upload-memory", "The maximum amount of memory allowed to be used when saving uploaded files.").Short('m').Default("10MiB").PlaceHolder("SIZE").Bytes()
+	maxUploadMemory     int64
+
 	indexFlag = kingpin.Flag("index", "Automatically serve index files.").Short('i').Bool()
 	index     bool
 
@@ -43,6 +46,7 @@ func parseFlags() {
 	port = *portFlag
 	goFileServer = *goFileServerFlag
 	upload = *uploadFlag
+	maxUploadMemory = int64(*maxUploadMemoryFlag)
 	index = *indexFlag
 	useTLS = *useTLSFlag
 	tlsCert = *tlsCertFlag
