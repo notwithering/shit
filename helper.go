@@ -80,19 +80,3 @@ func getRealPath(path string) (string, error) {
 
 	return "", nil
 }
-
-func serveFile(w http.ResponseWriter, r *http.Request, filename string) error {
-	file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	fileinfo, err := os.Stat(filename)
-	if err != nil {
-		return err
-	}
-
-	http.ServeContent(w, r, filename, fileinfo.ModTime(), file)
-	return nil
-}
