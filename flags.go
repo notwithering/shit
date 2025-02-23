@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/alecthomas/kingpin/v2"
 )
@@ -35,6 +36,12 @@ var (
 	tlsKeyFlag = kingpin.Flag("key", "Path to the TLS key file.").Short('k').Envar("TLS_KEY").ExistingFile()
 	tlsKey     string
 
+	readTimeoutFlag = kingpin.Flag("read-timeout", "Timeout for a request to complete.").Short('r').Default("5s").Duration()
+	readTimeout     time.Duration
+
+	writeTimeoutFlag = kingpin.Flag("write-timeout", "Timeout for a response to complete.").Short('w').Default("10s").Duration()
+	writeTimeout     time.Duration
+
 	exportsArg = kingpin.Arg("files", "The files or directories to share.").Default(".").ExistingFilesOrDirs()
 	exports    []string
 )
@@ -51,6 +58,8 @@ func parseFlags() {
 	useTLS = *useTLSFlag
 	tlsCert = *tlsCertFlag
 	tlsKey = *tlsKeyFlag
+	readTimeout = *readTimeoutFlag
+	writeTimeout = *writeTimeoutFlag
 
 	for _, export := range *exportsArg {
 		abs, err := filepath.Abs(export)
