@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -37,6 +38,10 @@ func get(w http.ResponseWriter, r *http.Request) {
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), uploadTimeout)
+	defer cancel()
+	r = r.WithContext(ctx)
+
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
 		httpErr(w, err)
 		return

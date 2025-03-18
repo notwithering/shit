@@ -42,6 +42,9 @@ var (
 	writeTimeoutFlag = kingpin.Flag("write-timeout", "Timeout for a response to complete.").Short('w').Default("10s").Duration()
 	writeTimeout     time.Duration
 
+	uploadTimeoutFlag = kingpin.Flag("upload-timeout", "Timeout for a file upload to complete.").Short('U').Default("30m").Duration()
+	uploadTimeout     time.Duration
+
 	exportsArg = kingpin.Arg("files", "The files or directories to share.").Default(".").ExistingFilesOrDirs()
 	exports    []string
 )
@@ -60,6 +63,7 @@ func parseFlags() {
 	tlsKey = *tlsKeyFlag
 	readTimeout = *readTimeoutFlag
 	writeTimeout = *writeTimeoutFlag
+	uploadTimeout = *uploadTimeoutFlag
 
 	for _, export := range *exportsArg {
 		abs, err := filepath.Abs(export)
