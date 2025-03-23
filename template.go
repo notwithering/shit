@@ -1,8 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -60,4 +64,40 @@ func makeCurlResponse(links []string) string {
 		b.WriteByte('\n')
 	}
 	return b.String()
+}
+
+func executeExports(w http.ResponseWriter, r *http.Request) error {
+	var links []string
+
+	for _, file := range exports {
+		fileinfo, err := os.Stat(file)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+
+		name := filepath.Base(file)
+		if fileinfo.IsDir() {
+			name += "/"
+		}
+		links = append(links, filepath.Base(file))
+	}
+
+	return execute(w, r, links)
+}
+
+func executeDirEntries(w http.ResponseWriter, r *http.Request, dir []fs.DirEntry) error {
+	var links []string
+
+	for _, file := range dir {
+		name := file.Name()
+		if file.IsDir() {
+			name += "/"
+		}
+		links = append(links, name)
+	}
+
+	return execute(w, r, links)
 }
