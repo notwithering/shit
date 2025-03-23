@@ -66,7 +66,7 @@ func makeCurlResponse(links []string) string {
 	return b.String()
 }
 
-func executeExports(w http.ResponseWriter, r *http.Request) error {
+func exportsToLinks(exports []string) ([]string, error) {
 	var links []string
 
 	for _, file := range exports {
@@ -75,7 +75,7 @@ func executeExports(w http.ResponseWriter, r *http.Request) error {
 			continue
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		name := filepath.Base(file)
@@ -85,10 +85,10 @@ func executeExports(w http.ResponseWriter, r *http.Request) error {
 		links = append(links, filepath.Base(file))
 	}
 
-	return execute(w, r, links)
+	return links, nil
 }
 
-func executeDirEntries(w http.ResponseWriter, r *http.Request, dir []fs.DirEntry) error {
+func dirToLinks(dir []fs.DirEntry) []string {
 	var links []string
 
 	for _, file := range dir {
@@ -99,5 +99,5 @@ func executeDirEntries(w http.ResponseWriter, r *http.Request, dir []fs.DirEntry
 		links = append(links, name)
 	}
 
-	return execute(w, r, links)
+	return links
 }

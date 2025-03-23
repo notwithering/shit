@@ -52,19 +52,27 @@ func serveRoot(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
+	var links []string
+
 	if rootMode == rootModeSingleDir {
 		dir, err := os.ReadDir(export)
 		if err != nil {
 			return err
 		}
 
-		return executeDirEntries(w, r, dir)
+		links = dirToLinks(dir)
 	} else if rootMode == rootModeSingleFile {
 		http.Redirect(w, r, filepath.Base(export), http.StatusPermanentRedirect)
 		return nil
+	} else {
+		var err error
+		links, err = exportsToLinks(exports)
+		if err != nil {
+			return err
+		}
 	}
 
-	return executeExports(w, r)
+	return execute(w, r, links)
 }
 
 func serveExports(w http.ResponseWriter, r *http.Request) error {
@@ -104,7 +112,8 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
-		return executeDirEntries(w, r, dir)
+		links := dirToLinks(dir)
+		execute(w, r, links)
 	}
 
 	return serveFile(w, r, path)
