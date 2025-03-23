@@ -38,6 +38,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
+	// FIXME: this does not actually change the upload timeout
 	ctx, cancel := context.WithTimeout(r.Context(), uploadTimeout)
 	defer cancel()
 	r = r.WithContext(ctx)
