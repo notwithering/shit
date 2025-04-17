@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -29,32 +31,37 @@ func getResponse(r *http.Request, links []string) string {
 }
 
 func makeHtmlResponse(links []string) string {
-	return `<!doctype html>
-<html data-fbscriptallow="true">
-		<head>
-			<meta name="viewport" content="width=device-width" />
-		</head>
-		<body>
-			<pre>` + func() string {
-		b := strings.Builder{}
-		for _, name := range links {
-			fmt.Fprintf(&b, "<a href=\"%s\">%s</a>\n", name, name)
-		}
-		return b.String()
-	}() + `</pre>
+	var b strings.Builder
 
-			` + func() string {
-		if upload {
-			return `		<form method="POST" enctype="multipart/form-data">
+	b.WriteString(`<!doctype html>
+<html data-fbscriptallow="true">
+	<head>
+		<meta name="viewport" content="width=device-width" />
+	</head>
+	<body>
+		<pre>
+`)
+
+	for _, name := range links {
+		fmt.Fprintf(&b, "<a href=\"%s\">%s</a>\n", url.PathEscape(name), html.EscapeString(name))
+	}
+
+	b.WriteString(`</pre>
+`)
+
+	if upload {
+		b.WriteString(`<form method="POST" enctype="multipart/form-data">
 			<input type="file" name="files" multiple required />
 			<button type="submit">Upload</button>
 		</form>
-`
-		}
-		return ""
-	}() + `	</body>
+`)
+	}
+
+	b.WriteString(`	</body>
 </html>
-`
+`)
+
+	return b.String()
 }
 
 func makeCurlResponse(links []string) string {
