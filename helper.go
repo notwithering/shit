@@ -80,3 +80,10 @@ func getRealPath(path string) (string, error) {
 
 	return "", nil
 }
+
+func redirectCode() int {
+	if permanentRedirect {
+		return http.StatusPermanentRedirect
+	}
+	return http.StatusTemporaryRedirect
+}

@@ -24,7 +24,7 @@ go install github.com/notwithering/shit@latest
     - file upload support (`--upload`)
     - index file serving (`--index`)
     - go's `http.FileServer` mode (`--go`)
-    - fine tuned control (`--max-upload-memory`, `--read-timeout`, `--write-timeout`, `--upload-timeout`)
+    - fine tuned control (`--max-upload-memory`, `--read-timeout`, `--write-timeout`, `--upload-timeout`, `--permanent-redirect`)
 - security & reliability
     - path validation & traversal protection
     - error logging with timestamps

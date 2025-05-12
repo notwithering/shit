@@ -45,6 +45,9 @@ var (
 	uploadTimeoutFlag = kingpin.Flag("upload-timeout", "Timeout for a file upload to complete.").Short('U').Default("30m").Duration()
 	uploadTimeout     time.Duration
 
+	permanentRedirectFlag = kingpin.Flag("permanent-redirect", "Use permanent redirects.").Short('P').Bool()
+	permanentRedirect     bool
+
 	exportsArg = kingpin.Arg("files", "The files or directories to share.").Default(".").ExistingFilesOrDirs()
 	exports    []string
 )
@@ -64,6 +67,7 @@ func parseFlags() {
 	readTimeout = *readTimeoutFlag
 	writeTimeout = *writeTimeoutFlag
 	uploadTimeout = *uploadTimeoutFlag
+	permanentRedirect = *permanentRedirectFlag
 
 	for _, export := range *exportsArg {
 		abs, err := filepath.Abs(export)

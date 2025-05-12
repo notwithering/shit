@@ -62,7 +62,7 @@ func serveRoot(w http.ResponseWriter, r *http.Request) error {
 
 		links = dirToLinks(dir)
 	} else if rootMode == rootModeSingleFile {
-		http.Redirect(w, r, filepath.Base(export), http.StatusPermanentRedirect)
+		http.Redirect(w, r, filepath.Base(export), redirectCode())
 		return nil
 	} else {
 		var err error
@@ -93,7 +93,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 
 	if fileinfo.IsDir() {
 		if !strings.HasSuffix(r.URL.Path, "/") {
-			http.Redirect(w, r, r.URL.Path+"/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, r.URL.Path+"/", redirectCode())
 			return nil
 		}
 
