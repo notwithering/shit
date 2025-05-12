@@ -1,8 +1,8 @@
 # shit - **sh**are **it**
 
-simple and effective fileserver written in go to share files quickly
+shit is a lightweight file server written in go designed for quickly sharing files and directories over http
 
-shit when i first created it was just a go script that ran an http.FileServer on the current directory but i kept adding more features as i needed them over time (hosting a single file, hosting multiple files, hosting both files and directories, etc.) but now i think its ready for other people to use
+it supports serving single or multiple files, directories, or a combination of both with  features like mime type detection, directory browsing, file uploading, tls, and customizable server settings
 
 shit is a successor to my previous project [vmshare](https://github.com/notwithering/vmshare)
 
