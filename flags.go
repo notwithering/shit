@@ -118,6 +118,10 @@ func checkForFlagIncompatabilities() {
 			kingpin.Errorf("flag --index incompatible with --go")
 			err = true
 		}
+		if permanentRedirect {
+			kingpin.Errorf("flag --permanent-redirect incompatible with --go")
+			err = true
+		}
 	}
 	if upload && rootMode == rootModeSingleFile {
 		kingpin.Errorf("flag --upload incompatible with rootModeSingleFile")
