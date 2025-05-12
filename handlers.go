@@ -1,11 +1,11 @@
 package main
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func registerHandlers() {
@@ -38,10 +38,8 @@ func get(w http.ResponseWriter, r *http.Request) {
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
-	// FIXME: this does not actually change the upload timeout
-	ctx, cancel := context.WithTimeout(r.Context(), uploadTimeout)
-	defer cancel()
-	r = r.WithContext(ctx)
+	rc := http.NewResponseController(w)
+	rc.SetReadDeadline(time.Now().Add(uploadTimeout))
 
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
 		httpErr(w, err)
