@@ -49,7 +49,7 @@ func makeHtmlResponse(links []string) string {
 	b.WriteString(`</pre>
 `)
 
-	if upload {
+	if cli.Upload {
 		b.WriteString(`<form method="POST" enctype="multipart/form-data">
 			<input type="file" name="files" multiple required />
 			<button type="submit">Upload</button>

@@ -89,6 +89,7 @@ etc.
 
 this project uses the following dependencies with the license as noted:
 
-- [github.com/alecthomas/kingpin](https://github.com/alecthomas/kingpin) - MIT License
+- [github.com/alecthomas/kong](https://github.com/alecthomas/kong) - MIT License
+- [github.com/dustin/go-humanize](https://github.com/dustin/go-humanize) - MIT License
 
 each dependency retains its respective license. for more details refer to their official documentation or source code

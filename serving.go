@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/alecthomas/kingpin/v2"
 )
 
 var (
@@ -16,28 +14,28 @@ var (
 
 func startServer() {
 	s := &http.Server{
-		Addr:         host + ":" + port,
-		ReadTimeout:  readTimeout,
-		WriteTimeout: writeTimeout,
+		Addr:         cli.Host + ":" + cli.Port,
+		ReadTimeout:  cli.ReadTimeout,
+		WriteTimeout: cli.WriteTimeout,
 	}
 
-	if useTLS {
-		fmt.Printf("https://%s:%s/\n", host, port)
-		if err := s.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
-			kingpin.Fatalf("error while serving: %s", err)
+	if cli.UseTLS {
+		fmt.Printf("https://%s:%s/\n", cli.Host, cli.Port)
+		if err := s.ListenAndServeTLS(cli.TLSCert, cli.TLSKey); err != nil {
+			kctx.Fatalf("error while serving: %s", err)
 		}
 	} else {
-		fmt.Printf("http://%s:%s/\n", host, port)
+		fmt.Printf("http://%s:%s/\n", cli.Host, cli.Port)
 		if err := s.ListenAndServe(); err != nil {
-			kingpin.Fatalf("error while serving: %s", err)
+			kctx.Fatalf("error while serving: %s", err)
 		}
 	}
 }
 
 func serveRoot(w http.ResponseWriter, r *http.Request) error {
-	export := exports[0]
+	export := cli.Exports[0]
 
-	if index {
+	if cli.Index {
 		path, err := getRealPath(r.URL.Path)
 		if err != nil {
 			return err
@@ -66,7 +64,7 @@ func serveRoot(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	} else {
 		var err error
-		links, err = exportsToLinks(exports)
+		links, err = exportsToLinks(cli.Exports)
 		if err != nil {
 			return err
 		}
@@ -97,7 +95,7 @@ func serveExports(w http.ResponseWriter, r *http.Request) error {
 			return nil
 		}
 
-		if index {
+		if cli.Index {
 			served, err := serveIndex(w, r, path)
 			if err != nil {
 				return err

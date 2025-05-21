@@ -5,88 +5,49 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/alecthomas/kingpin/v2"
+	"github.com/alecthomas/kong"
+	"github.com/dustin/go-humanize"
 )
 
-var (
-	hostFlag = kingpin.Flag("host", "The host to bind to.").Short('h').Default("0.0.0.0").Envar("HOST").String()
-	host     string
+var cli struct {
+	Host              string        `help:"The host to bind to." short:"h" env:"HOST" default:"0.0.0.0"`
+	Port              string        `help:"The port to serve." short:"p" env:"PORT" default:"8080"`
+	GoFileServer      bool          `help:"Use Go's http.FileServer." short:"g"`
+	Upload            bool          `help:"Allow file uploading." short:"u"`
+	MaxUploadMemory   ByteSize      `help:"The maximum memory allowed when saving uploaded files." short:"m" default:"10MiB"`
+	Index             bool          `help:"Automatically serve index files." short:"i"`
+	UseTLS            bool          `help:"Enable TLS." short:"t"`
+	TLSCert           string        `help:"Path to TLS certificate file." short:"c" env:"TLS_CERT" type:"existingfile"`
+	TLSKey            string        `help:"Path to the TLS key file." short:"k" env:"TLS_KEY" type:"existingfile"`
+	ReadTimeout       time.Duration `help:"Timeout for a request to complete." short:"r" default:"5s"`
+	WriteTimeout      time.Duration `help:"Timeout for a response to complete." short:"w" default:"10s"`
+	UploadTimeout     time.Duration `help:"Timeout for a file upload to complete." short:"U" default:"30m"`
+	PermanentRedirect bool          `help:"Use permanent redirects." short:"P"`
+	Exports           []string      `arg:"" name:"files" help:"The files or directories to share." type:"existingfileexistingdir" default:"."`
+}
 
-	portFlag = kingpin.Flag("port", "The port to serve.").Short('p').Default("8080").Envar("PORT").String()
-	port     string
-
-	goFileServerFlag = kingpin.Flag("go", "Use Go's http.FileServer.").Short('g').Bool()
-	goFileServer     bool
-
-	uploadFlag = kingpin.Flag("upload", "Allow file uploading.").Short('u').Bool()
-	upload     bool
-
-	maxUploadMemoryFlag = kingpin.Flag("max-upload-memory", "The maximum amount of memory allowed to be used when saving uploaded files.").Short('m').Default("10MiB").Bytes()
-	maxUploadMemory     int64
-
-	indexFlag = kingpin.Flag("index", "Automatically serve index files.").Short('i').Bool()
-	index     bool
-
-	useTLSFlag = kingpin.Flag("tls", "Enable TLS.").Short('t').Bool()
-	useTLS     bool
-
-	tlsCertFlag = kingpin.Flag("cert", "Path to TLS certificate file.").Short('c').Envar("TLS_CERT").ExistingFile()
-	tlsCert     string
-
-	tlsKeyFlag = kingpin.Flag("key", "Path to the TLS key file.").Short('k').Envar("TLS_KEY").ExistingFile()
-	tlsKey     string
-
-	readTimeoutFlag = kingpin.Flag("read-timeout", "Timeout for a request to complete.").Short('r').Default("5s").Duration()
-	readTimeout     time.Duration
-
-	writeTimeoutFlag = kingpin.Flag("write-timeout", "Timeout for a response to complete.").Short('w').Default("10s").Duration()
-	writeTimeout     time.Duration
-
-	uploadTimeoutFlag = kingpin.Flag("upload-timeout", "Timeout for a file upload to complete.").Short('U').Default("30m").Duration()
-	uploadTimeout     time.Duration
-
-	permanentRedirectFlag = kingpin.Flag("permanent-redirect", "Use permanent redirects.").Short('P').Bool()
-	permanentRedirect     bool
-
-	exportsArg = kingpin.Arg("files", "The files or directories to share.").Default(".").ExistingFilesOrDirs()
-	exports    []string
-)
+var kctx *kong.Context
 
 func parseFlags() {
-	kingpin.Parse()
+	kctx = kong.Parse(&cli)
 
-	host = *hostFlag
-	port = *portFlag
-	goFileServer = *goFileServerFlag
-	upload = *uploadFlag
-	maxUploadMemory = int64(*maxUploadMemoryFlag)
-	index = *indexFlag
-	useTLS = *useTLSFlag
-	tlsCert = *tlsCertFlag
-	tlsKey = *tlsKeyFlag
-	readTimeout = *readTimeoutFlag
-	writeTimeout = *writeTimeoutFlag
-	uploadTimeout = *uploadTimeoutFlag
-	permanentRedirect = *permanentRedirectFlag
-
-	for _, export := range *exportsArg {
+	var exports []string
+	for _, export := range cli.Exports {
 		abs, err := filepath.Abs(export)
-		if err != nil {
-			kingpin.Fatalf("error while getting export %s's absolute path: %s", export, err)
-		}
-		for _, export := range exports {
-			if filepath.Base(export) == filepath.Base(abs) {
-				kingpin.Fatalf("can't have 2 exports with same base name: %s, %s", export, abs)
+		kctx.FatalIfErrorf(err, "error while getting export %s's absolute path", export)
+
+		for _, e := range exports {
+			if filepath.Base(e) == filepath.Base(abs) {
+				kctx.Fatalf("can't have 2 exports with same base name: %s, %s", e, abs)
 			}
 		}
 		exports = append(exports, abs)
 	}
+	cli.Exports = exports
 
 	if len(exports) == 1 {
 		info, err := os.Stat(exports[0])
-		if err != nil {
-			kingpin.Fatalf("error while finding root mode: %s", err)
-		}
+		kctx.FatalIfErrorf(err, "error while finding root mode")
 
 		if info.IsDir() {
 			rootMode = rootModeSingleDir
@@ -99,36 +60,52 @@ func parseFlags() {
 }
 
 func checkForFlagIncompatabilities() {
-	var err bool
+	var hasErr bool
 
-	if useTLS && (tlsCert == "" || tlsKey == "") {
-		kingpin.Errorf("flags --cert and --key are required when --tls is set")
-		err = true
+	if cli.UseTLS && (cli.TLSCert == "" || cli.TLSKey == "") {
+		println("flags --cert and --key are required when --tls is set")
+		hasErr = true
 	}
-	if goFileServer {
+	if cli.GoFileServer {
 		if rootMode != rootModeSingleDir {
-			kingpin.Errorf("flag --go only compatible with rootModeSingleDir")
-			err = true
+
+			println("flag --go only compatible with rootModeSingleDir")
+			hasErr = true
 		}
-		if upload {
-			kingpin.Errorf("flag --upload incompatible with --go")
-			err = true
+		if cli.Upload {
+			println("flag --upload incompatible with --go")
+			hasErr = true
 		}
-		if index {
-			kingpin.Errorf("flag --index incompatible with --go")
-			err = true
+		if cli.Index {
+			println("flag --index incompatible with --go")
+			hasErr = true
 		}
-		if permanentRedirect {
-			kingpin.Errorf("flag --permanent-redirect incompatible with --go")
-			err = true
+		if cli.PermanentRedirect {
+			println("flag --permanent-redirect incompatible with --go")
+			hasErr = true
 		}
 	}
-	if upload && rootMode == rootModeSingleFile {
-		kingpin.Errorf("flag --upload incompatible with rootModeSingleFile")
-		err = true
+	if cli.Upload && rootMode == rootModeSingleFile {
+		println("flag --upload incompatible with rootModeSingleFile")
+		hasErr = true
 	}
 
-	if err {
+	if hasErr {
 		os.Exit(1)
 	}
+}
+
+type ByteSize int64
+
+func (b *ByteSize) Decode(ctx *kong.DecodeContext) error {
+	var raw string
+	if err := ctx.Scan.PopValueInto("string", &raw); err != nil {
+		return err
+	}
+	bytes, err := humanize.ParseBytes(raw)
+	if err != nil {
+		return err
+	}
+	*b = ByteSize(bytes)
+	return nil
 }

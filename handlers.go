@@ -9,8 +9,8 @@ import (
 )
 
 func registerHandlers() {
-	if goFileServer {
-		http.Handle("/", http.FileServer(http.Dir(exports[0])))
+	if cli.GoFileServer {
+		http.Handle("/", http.FileServer(http.Dir(cli.Exports[0])))
 	} else {
 		registerShitHandlers()
 	}
@@ -18,7 +18,7 @@ func registerHandlers() {
 
 func registerShitHandlers() {
 	http.HandleFunc("GET /", get)
-	if upload {
+	if cli.Upload {
 		http.HandleFunc("POST /", post)
 	}
 }
@@ -39,9 +39,9 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 func post(w http.ResponseWriter, r *http.Request) {
 	rc := http.NewResponseController(w)
-	rc.SetReadDeadline(time.Now().Add(uploadTimeout))
+	rc.SetReadDeadline(time.Now().Add(cli.UploadTimeout))
 
-	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
+	if err := r.ParseMultipartForm(int64(cli.MaxUploadMemory)); err != nil {
 		httpErr(w, err)
 		return
 	}
@@ -91,7 +91,7 @@ func post(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if rootMode == rootModeExports {
-			exports = append(exports, header.Filename)
+			cli.Exports = append(cli.Exports, header.Filename)
 		}
 	}
 

@@ -7,13 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/alecthomas/kingpin/v2"
 )
 
 func httpErr(w http.ResponseWriter, err error) {
 	if !errors.Is(err, http.ErrHandlerTimeout) {
-		kingpin.Errorf("[%s] %s\n", time.Now().Format(time.DateTime), err.Error())
+		kctx.Errorf("[%s] %s\n", time.Now().Format(time.DateTime), err.Error())
 	}
 	if w.Header().Get("Content-Type") == "" {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -47,7 +45,7 @@ func getRealPath(path string) (string, error) {
 	}
 
 	if rootMode == rootModeSingleDir {
-		for _, export := range exports {
+		for _, export := range cli.Exports {
 			file, err := getFile(export, path)
 			if err != nil {
 				return "", nil
@@ -66,11 +64,11 @@ func getRealPath(path string) (string, error) {
 
 		reqFile := filepath.Join(split[1:]...)
 
-		for _, export := range exports {
+		for _, export := range cli.Exports {
 			if filepath.Base(export) == reqExport {
 				file, err := getFile(export, reqFile)
 				if err != nil {
-					kingpin.Errorf("error while finding requested file: %s", err)
+					kctx.Errorf("error while finding requested file: %s", err)
 				}
 
 				return file, nil
@@ -82,7 +80,7 @@ func getRealPath(path string) (string, error) {
 }
 
 func redirectCode() int {
-	if permanentRedirect {
+	if cli.PermanentRedirect {
 		return http.StatusPermanentRedirect
 	}
 	return http.StatusTemporaryRedirect
