@@ -68,25 +68,24 @@ func checkForFlagIncompatabilities() {
 	}
 	if cli.GoFileServer {
 		if rootMode != rootModeSingleDir {
-
-			println("flag --go only compatible with rootModeSingleDir")
+			kctx.Errorf("flag --go only compatible with rootModeSingleDir")
 			hasErr = true
 		}
 		if cli.Upload {
-			println("flag --upload incompatible with --go")
+			kctx.Errorf("flag --upload incompatible with --go")
 			hasErr = true
 		}
 		if cli.Index {
-			println("flag --index incompatible with --go")
+			kctx.Errorf("flag --index incompatible with --go")
 			hasErr = true
 		}
 		if cli.PermanentRedirect {
-			println("flag --permanent-redirect incompatible with --go")
+			kctx.Errorf("flag --permanent-redirect incompatible with --go")
 			hasErr = true
 		}
 	}
 	if cli.Upload && rootMode == rootModeSingleFile {
-		println("flag --upload incompatible with rootModeSingleFile")
+		kctx.Errorf("flag --upload incompatible with rootModeSingleFile")
 		hasErr = true
 	}
 
