@@ -98,7 +98,7 @@ type ByteSize int64
 
 func (b *ByteSize) Decode(ctx *kong.DecodeContext) error {
 	var raw string
-	if err := ctx.Scan.PopValueInto("string", &raw); err != nil {
+	if err := ctx.Scan.PopValueInto("size", &raw); err != nil {
 		return err
 	}
 	bytes, err := humanize.ParseBytes(raw)
