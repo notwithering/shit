@@ -1,4 +1,4 @@
-# shit - **sh**are **it**
+# shit - `sh`are `it`
 
 shit is a lightweight file server written in go designed for quickly sharing files and directories over http
 
