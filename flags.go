@@ -18,7 +18,7 @@ var cli struct {
 	Index             bool          `help:"Automatically serve index files." short:"i"`
 	TLS               bool          `help:"Enable TLS." short:"t"`
 	Cert              string        `help:"Path to TLS certificate file." short:"c" env:"TLS_CERT" type:"existingfile"`
-	Key               string        `help:"Path to the TLS key file." short:"k" env:"TLS_KEY" type:"existingfile"`
+	Key               string        `help:"Path to TLS key file." short:"k" env:"TLS_KEY" type:"existingfile"`
 	ReadTimeout       time.Duration `help:"Timeout for a request to complete." short:"r" default:"5s"`
 	WriteTimeout      time.Duration `help:"Timeout for a response to complete." short:"w" default:"10s"`
 	UploadTimeout     time.Duration `help:"Timeout for a file upload to complete." short:"U" default:"30m"`
