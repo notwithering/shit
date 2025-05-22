@@ -9,7 +9,7 @@ import (
 )
 
 func registerHandlers() {
-	if cli.GoFileServer {
+	if cli.Go {
 		http.Handle("/", http.FileServer(http.Dir(cli.Exports[0])))
 	} else {
 		registerShitHandlers()

@@ -19,9 +19,9 @@ func startServer() {
 		WriteTimeout: cli.WriteTimeout,
 	}
 
-	if cli.UseTLS {
+	if cli.TLS {
 		fmt.Printf("https://%s:%s/\n", cli.Host, cli.Port)
-		if err := s.ListenAndServeTLS(cli.TLSCert, cli.TLSKey); err != nil {
+		if err := s.ListenAndServeTLS(cli.Cert, cli.Key); err != nil {
 			kctx.Fatalf("error while serving: %s", err)
 		}
 	} else {

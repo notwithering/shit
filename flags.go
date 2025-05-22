@@ -12,13 +12,13 @@ import (
 var cli struct {
 	Host              string        `help:"The host to bind to." short:"h" env:"HOST" default:"0.0.0.0"`
 	Port              string        `help:"The port to serve." short:"p" env:"PORT" default:"8080"`
-	GoFileServer      bool          `help:"Use Go's http.FileServer." short:"g"`
+	Go                bool          `help:"Use Go's http.FileServer." short:"g"`
 	Upload            bool          `help:"Allow file uploading." short:"u"`
 	MaxUploadMemory   ByteSize      `help:"The maximum memory allowed when saving uploaded files." short:"m" default:"10MiB"`
 	Index             bool          `help:"Automatically serve index files." short:"i"`
-	UseTLS            bool          `help:"Enable TLS." short:"t"`
-	TLSCert           string        `help:"Path to TLS certificate file." short:"c" env:"TLS_CERT" type:"existingfile"`
-	TLSKey            string        `help:"Path to the TLS key file." short:"k" env:"TLS_KEY" type:"existingfile"`
+	TLS               bool          `help:"Enable TLS." short:"t"`
+	Cert              string        `help:"Path to TLS certificate file." short:"c" env:"TLS_CERT" type:"existingfile"`
+	Key               string        `help:"Path to the TLS key file." short:"k" env:"TLS_KEY" type:"existingfile"`
 	ReadTimeout       time.Duration `help:"Timeout for a request to complete." short:"r" default:"5s"`
 	WriteTimeout      time.Duration `help:"Timeout for a response to complete." short:"w" default:"10s"`
 	UploadTimeout     time.Duration `help:"Timeout for a file upload to complete." short:"U" default:"30m"`
@@ -62,11 +62,11 @@ func parseFlags() {
 func checkForFlagIncompatabilities() {
 	var hasErr bool
 
-	if cli.UseTLS && (cli.TLSCert == "" || cli.TLSKey == "") {
+	if cli.TLS && (cli.Cert == "" || cli.Key == "") {
 		println("flags --cert and --key are required when --tls is set")
 		hasErr = true
 	}
-	if cli.GoFileServer {
+	if cli.Go {
 		if rootMode != rootModeSingleDir {
 			kctx.Errorf("flag --go only compatible with rootModeSingleDir")
 			hasErr = true
