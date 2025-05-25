@@ -9,6 +9,10 @@ shit is a successor to my previous project [vmshare](https://github.com/notwithe
 ```bash
 go install github.com/notwithering/shit@latest
 ```
+```bash
+yay -S shit
+yay -S shit-git
+```
 
 ## features
 
