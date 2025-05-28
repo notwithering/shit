@@ -21,14 +21,12 @@ func startServer() {
 
 	if cli.TLS {
 		fmt.Printf("https://%s:%s/\n", cli.Host, cli.Port)
-		if err := s.ListenAndServeTLS(cli.Cert, cli.Key); err != nil {
-			kctx.Fatalf("error while serving: %s", err)
-		}
+		err := s.ListenAndServeTLS(cli.Cert, cli.Key)
+		kctx.FatalIfErrorf(err, "error while serving: %s", err)
 	} else {
 		fmt.Printf("http://%s:%s/\n", cli.Host, cli.Port)
-		if err := s.ListenAndServe(); err != nil {
-			kctx.Fatalf("error while serving: %s", err)
-		}
+		err := s.ListenAndServe()
+		kctx.FatalIfErrorf(err, "error while serving: %s", err)
 	}
 }
 
