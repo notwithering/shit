@@ -7,11 +7,9 @@ it supports serving single or multiple files, directories, or a combination of b
 shit is a successor to my previous project [vmshare](https://github.com/notwithering/vmshare)
 
 ```bash
-go install github.com/notwithering/shit@latest
-```
-```bash
-yay -S shit
-yay -S shit-git
+go install github.com/notwithering/shit@latest # latest release unversioned
+yay -S shit # latest release versioned
+yay -S shit-git # latest git versioned
 ```
 
 ## features
