@@ -50,6 +50,15 @@ pathWalker:
 	for partI, part := range pathParts {
 		if current.Physical {
 			rest := pathParts[partI:]
+			if len(rest) == 0 {
+				// fully resolved
+				return current, nil
+			}
+
+			if !current.IsDirectory {
+				// cant resolve further than a file
+				return nil, nil
+			}
 			realPath := filepath.Join(append([]string{current.Path}, rest...)...) // FIXME
 
 			info, err := os.Stat(realPath)
