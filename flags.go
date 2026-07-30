@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/alecthomas/kong"
 )
 
@@ -13,9 +11,6 @@ type cli struct {
 	TLS  bool   `help:"Enable TLS." short:"t"`
 	Cert string `help:"Path to TLS certificate file." short:"c" env:"TLS_CERT" type:"existingfile"`
 	Key  string `help:"Path to TLS key file." short:"k" env:"TLS_KEY" type:"existingfile"`
-
-	ReadTimeout  time.Duration `help:"Timeout for a request to complete." default:"5s"`
-	WriteTimeout time.Duration `help:"Timeout for a response to complete." default:"10s"`
 
 	Exports []string `arg:"" name:"files" help:"The files or directories to share." type:"existingfileexistingdir" default:"."`
 }
