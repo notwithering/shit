@@ -2,7 +2,7 @@
 
 shit is a lightweight file server written in go designed for quickly sharing files and directories over http
 
-it supports serving single or multiple files, directories, or a combination of both with features like mime type detection, directory browsing, file uploading, tls, and customizable server settings
+it supports serving single or multiple files, directories, or a combination of both with features like mime type detection, directory browsing, tls, and customizable server settings
 
 ```bash
 go install github.com/notwithering/shit@latest
