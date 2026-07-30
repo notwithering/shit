@@ -46,9 +46,8 @@ func (h *fileHandler) pathToNode(path string) (*tree.Node, error) {
 	current := h.root
 	pathParts := urlpath.SplitList(path)
 
+pathWalker:
 	for partI, part := range pathParts {
-		var found bool
-
 		if current.Physical {
 			rest := pathParts[partI:]
 			realPath := filepath.Join(append([]string{current.Path}, rest...)...) // FIXME
@@ -69,19 +68,14 @@ func (h *fileHandler) pathToNode(path string) (*tree.Node, error) {
 			}, nil
 		}
 
-		// fmt.Println(part)
-
 		for _, child := range current.Children {
 			if child.Name == part {
 				current = child
-				found = true
-				break
+				continue pathWalker
 			}
 		}
 
-		if !found {
-			return nil, nil
-		}
+		return nil, nil
 	}
 
 	return current, nil
