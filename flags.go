@@ -7,7 +7,7 @@ import (
 )
 
 type cli struct {
-	Host string `help:"The host to bind to." short:"h" env:"HOST" default:"0.0.0.0"`
+	Host string `help:"The host to bind to." short:"H" env:"HOST" default:"0.0.0.0"`
 	Port string `help:"The port to serve." short:"p" env:"PORT" default:"8080"`
 
 	TLS  bool   `help:"Enable TLS." short:"t"`
