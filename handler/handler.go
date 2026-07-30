@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/notwithering/shit/tree"
 	"github.com/notwithering/shit/urlpath"
@@ -63,7 +64,7 @@ pathWalker:
 
 			info, err := os.Stat(realPath)
 			if err != nil {
-				if errors.Is(err, os.ErrNotExist) {
+				if errors.Is(err, syscall.ENOENT) || errors.Is(err, syscall.ENOTDIR) {
 					return nil, nil
 				}
 				return nil, err
