@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"fmt"
+	"html"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -126,6 +127,7 @@ func serveDirectory(w http.ResponseWriter, _ *http.Request, n *tree.Node) {
 		if child.IsDirectory {
 			name += "/"
 		}
+		name = html.EscapeString(name)
 
 		fmt.Fprintf(w, "<a href=\"%s\">%s</a><br>", name, name)
 	}
