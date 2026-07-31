@@ -82,7 +82,6 @@ pathWalker:
 }
 
 func serveNode(w http.ResponseWriter, r *http.Request, node *tree.Node) {
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Cache-Control", "no-cache")
 
 	if node.IsDirectory {
@@ -105,6 +104,8 @@ func serveDirectory(w http.ResponseWriter, _ *http.Request, n *tree.Node) {
 	} else {
 		children = n.Children
 	}
+
+	w.WriteHeader(http.StatusOK)
 
 	for _, child := range children {
 		name := child.Name
