@@ -1,3 +1,2 @@
 - `--sort` flag (alphabetical, size, date, etc.)
 - `--long` flag (show more information like `ls -l` looking similar to apache file listing)
-- simplify `serving.go` executing functions
