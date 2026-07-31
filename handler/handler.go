@@ -27,7 +27,7 @@ func (h *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if node == nil {
-		http.Error(w, "404: Not Found", http.StatusNotFound)
+		notFound(w, r)
 		return
 	}
 
@@ -129,10 +129,18 @@ func serveFile(w http.ResponseWriter, r *http.Request, node *tree.Node) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if info == nil {
+		notFound(w, r)
+		return
+	}
 
 	file, err := node.Open()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if file == nil {
+		notFound(w, r)
 		return
 	}
 	defer file.Close()
