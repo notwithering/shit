@@ -82,6 +82,9 @@ pathWalker:
 }
 
 func serveNode(w http.ResponseWriter, r *http.Request, node *tree.Node) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Cache-Control", "no-cache")
+
 	if node.IsDirectory {
 		serveDirectory(w, r, node)
 	} else {
