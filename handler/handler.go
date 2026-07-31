@@ -1,13 +1,10 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"html"
 	"net/http"
-	"os"
 	"path/filepath"
-	"syscall"
 
 	"github.com/notwithering/shit/tree"
 	"github.com/notwithering/shit/urlpath"
@@ -63,20 +60,12 @@ pathWalker:
 			}
 			realPath := filepath.Join(append([]string{current.Path}, rest...)...) // FIXME
 
-			info, err := os.Stat(realPath)
+			node, err := tree.NodeFromPath(realPath)
 			if err != nil {
-				if errors.Is(err, syscall.ENOENT) || errors.Is(err, syscall.ENOTDIR) {
-					return nil, nil
-				}
 				return nil, err
 			}
 
-			return &tree.Node{
-				Name:        info.Name(),
-				IsDirectory: info.IsDir(),
-				Physical:    true,
-				Path:        realPath,
-			}, nil
+			return node, nil
 		}
 
 		for _, child := range current.Children {
@@ -104,19 +93,11 @@ func serveDirectory(w http.ResponseWriter, _ *http.Request, n *tree.Node) {
 	var children []*tree.Node
 
 	if n.Physical {
-		dirEntries, err := os.ReadDir(n.Path)
+		var err error
+		children, err = n.ReadDir()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
-		}
-
-		for _, e := range dirEntries {
-			children = append(children, &tree.Node{
-				Name:        e.Name(),
-				IsDirectory: e.IsDir(),
-				Physical:    true,
-				Path:        filepath.Join(n.Path, e.Name()),
-			})
 		}
 	} else {
 		children = n.Children
@@ -134,5 +115,23 @@ func serveDirectory(w http.ResponseWriter, _ *http.Request, n *tree.Node) {
 }
 
 func serveFile(w http.ResponseWriter, r *http.Request, node *tree.Node) {
-	http.ServeFile(w, r, node.Path)
+	if !node.Physical {
+		http.Error(w, "virtual file somehow", http.StatusInternalServerError)
+		return
+	}
+
+	info, err := node.Stat()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	file, err := node.Open()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	http.ServeContent(w, r, node.Name, info.ModTime(), file)
 }
