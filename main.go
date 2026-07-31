@@ -11,6 +11,9 @@ func main() {
 
 	tree, err := tree.GenerateTree(cli.Exports)
 	kc.FatalIfErrorf(err, "generating tree")
+	if tree == nil {
+		kc.Fatalf("no valid exports")
+	}
 
 	fmt.Println(tree)
 

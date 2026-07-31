@@ -23,8 +23,15 @@ func GenerateTree(exports []string) (*Node, error) {
 		if err != nil {
 			return nil, err
 		}
+		if child == nil {
+			continue
+		}
 
 		root.Children = append(root.Children, child)
+	}
+
+	if root.Children == nil {
+		return nil, nil
 	}
 
 	return root, nil
