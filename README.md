@@ -4,6 +4,8 @@ shit is a lightweight file server written in go designed for quickly sharing fil
 
 it supports serving single or multiple files, directories, or a combination of both with features like mime type detection, directory browsing, and tls
 
+it is meant to be a temporary command only ran for quick file sharing which is why it uses temporary redirects and explicitly prevents caching
+
 ```bash
 go install github.com/notwithering/shit@latest
 ```
