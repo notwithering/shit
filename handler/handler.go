@@ -91,7 +91,7 @@ func serveNode(w http.ResponseWriter, r *http.Request, node *tree.Node) {
 	}
 }
 
-func serveDirectory(w http.ResponseWriter, _ *http.Request, n *tree.Node) {
+func serveDirectory(w http.ResponseWriter, r *http.Request, n *tree.Node) {
 	var children []*tree.Node
 
 	if n.Physical {
@@ -99,6 +99,10 @@ func serveDirectory(w http.ResponseWriter, _ *http.Request, n *tree.Node) {
 		children, err = n.ReadDir()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if children == nil {
+			notFound(w, r)
 			return
 		}
 	} else {

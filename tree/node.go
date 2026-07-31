@@ -42,17 +42,20 @@ func (n *Node) Stat() (os.FileInfo, error) {
 }
 
 func (n *Node) ReadDir() ([]*Node, error) {
-	var children []*Node
+	children := []*Node{}
 
 	dirEntries, err := os.ReadDir(n.Path)
 	if err != nil {
-		return children, err
+		if errors.Is(err, syscall.ENOENT) || errors.Is(err, syscall.ENOTDIR) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	for _, e := range dirEntries {
 		child, err := NodeFromPath(filepath.Join(n.Path, e.Name()))
 		if err != nil {
-			return children, err
+			return nil, err
 		}
 
 		children = append(children, child)
