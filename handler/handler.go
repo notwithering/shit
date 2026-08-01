@@ -109,6 +109,8 @@ func serveDirectory(w http.ResponseWriter, r *http.Request, n *tree.Node) {
 		children = n.Children
 	}
 
+	sortName(children)
+
 	w.WriteHeader(http.StatusOK)
 
 	for _, child := range children {
