@@ -23,7 +23,7 @@ func (h *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	node, err := h.pathToNode(path)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		internalServerError(w, err)
 		return
 	}
 	if node == nil {
@@ -98,7 +98,7 @@ func serveDirectory(w http.ResponseWriter, r *http.Request, n *tree.Node) {
 		var err error
 		children, err = n.ReadDir()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			internalServerError(w, err)
 			return
 		}
 		if children == nil {
@@ -130,7 +130,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, node *tree.Node) {
 
 	info, err := node.Stat()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		internalServerError(w, err)
 		return
 	}
 	if info == nil {
@@ -140,7 +140,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, node *tree.Node) {
 
 	file, err := node.Open()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		internalServerError(w, err)
 		return
 	}
 	if file == nil {
