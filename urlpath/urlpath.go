@@ -6,7 +6,6 @@ import (
 
 func Clean(path string) string {
 	path = strings.TrimLeft(path, "/")
-	isDir := strings.HasSuffix(path, "/")
 	path = strings.TrimRight(path, "/")
 
 	slice := make([]string, 0, len(path))
@@ -28,12 +27,7 @@ func Clean(path string) string {
 		return "/"
 	}
 
-	result := "/" + strings.Join(slice, "/")
-	if isDir {
-		result += "/"
-	}
-
-	return result
+	return "/" + strings.Join(slice, "/")
 }
 
 func Join(path ...string) string {
@@ -47,11 +41,4 @@ func SplitList(path string) []string {
 		return []string{}
 	}
 	return strings.Split(path, "/")
-}
-
-func SetDir(path string, isDir bool) string {
-	if isDir {
-		return Clean(path + "/")
-	}
-	return Clean(strings.TrimRight(path, "/"))
 }

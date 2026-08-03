@@ -31,7 +31,9 @@ func (h *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path = urlpath.SetDir(path, node.IsDirectory)
+	if node.IsDirectory && path != "/" {
+		path += "/"
+	}
 
 	if path != r.URL.Path {
 		http.Redirect(w, r, path, http.StatusFound)
